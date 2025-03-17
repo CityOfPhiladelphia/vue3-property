@@ -3,55 +3,48 @@ import { defineStore, acceptHMRUpdate } from 'pinia';
 export const useMainStore = defineStore("MainStore", {
   state: () => {
     return {
-      appVersion: 'atlas',
-      pageTitle: '',
-      addressSearchRunning: false,
-      datafetchRunning: false,
-      publicPath: null,
-      isMobileDevice: null,
-      isMac: null,
-      lastSearchMethod: 'address',
-      addressSearchValue: '' as string | null,
-      lastClickCoords: [0,0],
-      currentParcelGeocodeParameter: '',
-      otherParcelGeocodeParameter: '',
-      currentParcelAddress:'',
-      otherParcelAddress:'',
-      currentAddress: '' as string | null,
-      currentLang: null,
-      currentNearbyDataType: null,
-      currentNearbyTimeInterval: {},
-      dataSourcesLoadedArray: [],
-      clickedRow: [],
-      clickedMarkerId: null,
-      hoveredStateId: null,
-      selectedParcelId: null,
-      fullScreenMapEnabled: false,
-      fullScreenTopicsEnabled: false,
-      windowDimensions: {},
+      addressSearchRunning: false as boolean,
+      datafetchRunning: false as boolean,
+      publicPath: null as string | null,
+      isMobileDevice: null as boolean | null,
+      isMac: null as boolean | null,
+      lastSearchMethod: 'address' as string | null,
+      addressSearchValue: null as string | null,
+      lastClickCoords: [0,0] as Array<number>,
+      currentParcelGeocodeParameter: null as string | null,
+      otherParcelGeocodeParameter: null as string | null,
+      currentParcelAddress:null as string | null,
+      otherParcelAddress:null as string | null,
+      currentAddress: null as string | null,
+      currentLang: null as string | null,
+      dataSourcesLoadedArray: [] as Array<string>,
+      clickedRow: [] as Array<string>,
+      clickedMarkerId: null as string | null,
+      hoveredStateId: null as string | null,
+      selectedParcelId: null as string | null,
+      fullScreenMapEnabled: false as boolean,
+      fullScreenTopicsEnabled: false as boolean,
+      windowDimensions: {} as { width: number, height: number },
       // on election days, switch these two
-      currentTopic: 'property',
+      // currentTopic: 'property',
       // currentTopic: 'voting',
     };
   },
 
   actions: {
-    setCurrentAddress(address) {
+    setCurrentAddress(address: string | null) {
       this.currentAddress = address;
     },
-    setCurrentGeocodeParameter(value) {
-      this.currentGeocodeParameter = value;
+    setCurrentParcelGeocodeParameter(value: string) {
+      this.currentParcelGeocodeParameter = value;
     },
-    setLastSearchMethod(searchMethod) {
+    setLastSearchMethod(searchMethod: string) {
       this.lastSearchMethod = searchMethod;
-    },
-    setCurrentNearbyDataType(data) {
-      this.currentNearbyDataType = data;
     },
     clearDataSourcesLoadedArray() {
       this.dataSourcesLoadedArray = [];
     },
-    addToDataSourcesLoadedArray(data) {
+    addToDataSourcesLoadedArray(data: string) {
       this.dataSourcesLoadedArray.push(data);
     },
   },

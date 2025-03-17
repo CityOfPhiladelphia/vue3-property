@@ -26,7 +26,12 @@ interface AisData {
 export const useGeocodeStore = defineStore("GeocodeStore", {
   state: () => {
     return {
-      aisDataChecked: {},
+      aisDataChecked: {
+        total_size: 0,
+        normalized: '',
+        type: 'FeatureCollection',
+        features: [] as Array<AisFeature>,
+      } as AisData,
       aisData: {
         total_size: 0,
         normalized: '',

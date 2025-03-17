@@ -46,7 +46,7 @@ import ImageryDropdownControl from '@/components/map/ImageryDropdownControl.vue'
 // import CyclomediaPanel from '@/components/map/CyclomediaPanel.vue';
 import CyclomediaRecordingsClient from '@/util/recordings-client.js';
 
-let map;
+let map: maplibregl.Map;
 
 // keep image sources as computed props so that the publicPath can be used, for pushing the app to different environments
 const markerSrc = computed(() => {
@@ -78,9 +78,11 @@ onMounted(async () => {
     attributionControl: false,
   });
 
+  console.log('map:', map);
+
   map.on('load', () => {
-    let canvas = document.querySelector(".maplibregl-canvas");
-    canvas.setAttribute('tabindex', -1);
+    let canvas: HTMLCanvasElement | null = document.querySelector(".maplibregl-canvas");
+    if (canvas) canvas.setAttribute('tabindex', -1);
 
     if (route.query.streetview) {
       turnOnCyclomedia();
@@ -98,12 +100,6 @@ onMounted(async () => {
   // map.addImage('building-columns-solid', buildingColumnsImage.data);
   const cameraImage = await map.loadImage(cameraSrc.value)
   map.addImage('camera-icon', cameraImage.data);
-
-  map.getSource('addressMarker').setData({ type: 'Point', coordinates: [-75.163471, 39.953338] });
-  console.log('map.getSource("addressMarker"):', map.getSource('addressMarker'));
-  map.getStyle().layers.forEach(layer => {
-    console.log('layer:', layer);
-  })
 
   // add the unchanged maplibre controls
   map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
@@ -130,24 +126,14 @@ onMounted(async () => {
     }
   });
 
-  map.on('mouseenter', 'liBuildingFootprints', (e) => {
-    if (e.features.length > 0) {
-      map.getCanvas().style.cursor = 'pointer'
-    }
-  });
-
-  map.on('mouseleave', 'liBuildingFootprints', () => {
-    map.getCanvas().style.cursor = ''
-  });
-
   // if a cyclomedia recording circle is clicked, set its coordinates in the MapStore
-  map.on('click', 'cyclomediaRecordings', (e) => {
+  map.on('click', 'cyclomediaRecordings', (e: any) => {
     // if (import.meta.env.VITE_DEBUG == 'true') console.log('cyclomediaRecordings click, e:', e, 'e.features[0]:', e.features[0]);
     e.clickOnLayer = true;
     MapStore.clickedCyclomediaRecordingCoords = [ e.lngLat.lng, e.lngLat.lat ];
   });
 
-  map.on('mouseenter', 'cyclomediaRecordings', (e) => {
+  map.on('mouseenter', 'cyclomediaRecordings', (e: any) => {
     if (e.features.length > 0) {
       map.getCanvas().style.cursor = 'pointer'
     }
@@ -275,36 +261,6 @@ watch(
 
 // watch dor parcel coordinates for moving dor parcel
 const selectedParcelId = computed(() => { return MainStore.selectedParcelId; });
-// const dorCoordinates = computed(() => {
-//   let value;
-//   // if (import.meta.env.VITE_DEBUG == 'true') console.log('computed dorCoordinates, selectedParcelId.value:', selectedParcelId.value, 'ParcelsStore.dor', ParcelsStore.dor);
-//   if (selectedParcelId.value && ParcelsStore.dor.features && ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0]) {
-//     const parcel = ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0];
-//     // if (import.meta.env.VITE_DEBUG == 'true') console.log('computed, not watch, selectedParcelId.value:', selectedParcelId.value, 'ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0]:', ParcelsStore.dor.features.filter(parcel => parcel.id === selectedParcelId.value)[0]);
-//     if (parcel.geometry.type === 'Polygon') {
-//       value = parcel.geometry.coordinates[0];
-//     } else if (parcel.geometry.type === 'MultiPolygon') {
-//       value = parcel.geometry.coordinates;
-//     }
-//   } else {
-//     value = [[0,0], [0,1], [1,1], [1,0], [0,0]];
-//   }
-//   return value;
-// });
-
-// watch(
-//   () => dorCoordinates.value,
-//   newCoords => {
-//   if (import.meta.env.VITE_DEBUG == 'true') console.log('Map dorCoordinates watch, newCoords:', newCoords);
-//   let newParcel;
-//   if (newCoords.length > 3) {
-//     newParcel = polygon([ newCoords ]);
-//     map.getSource('dorParcel').setData(newParcel);
-//   } else {
-//     newParcel = multiPolygon(newCoords);
-//     map.getSource('dorParcel').setData(newParcel);
-//   }
-// });
 
 watch(
   () => MainStore.currentNearbyTimeInterval,
@@ -316,94 +272,6 @@ watch(
     }
   }
 )
-
-// watch topic for changing map style
-// watch(
-//   () => route.params.topic,
-//   async newTopic => {
-//     MainStore.currentTopic = route.params.topic;
-//     if (import.meta.env.VITE_DEBUG == 'true') console.log('Map route.params.topic watch, newTopic:', newTopic);
-//     const popup = document.getElementsByClassName('maplibregl-popup');
-//     if (popup.length) {
-//       popup[0].remove();
-//     }
-//     if (newTopic) {
-//       map.setStyle($config[$config.topicStyles[newTopic]]);
-//       if (MapStore.imageryOn) {
-//         map.addLayer($config.mapLayers[imagerySelected.value], 'cyclomediaRecordings')
-//         map.addLayer($config.mapLayers.imageryLabels, 'cyclomediaRecordings')
-//         map.addLayer($config.mapLayers.imageryParcelOutlines, 'cyclomediaRecordings')
-//       }
-//       const addressMarker = map.getSource('addressMarker');
-//       const dorParcel = map.getSource('dorParcel');
-//       if (addressMarker && pwdCoordinates.value.length) {
-//         if (import.meta.env.VITE_DEBUG == 'true') console.log('pwdCoordinates.value:', pwdCoordinates.value);
-//         // if (import.meta.env.VITE_DEBUG == 'true') console.log('1 map.layers:', map.getStyle().layers, map.getStyle().sources);
-//         addressMarker.setData(point(pwdCoordinates.value));
-//       }
-//       if (dorParcel) {
-//         if ($config.parcelLayerForTopic[newTopic] == 'dor') {
-//           let newParcel;
-//           if (dorCoordinates.value.length > 3) {
-//             newParcel = polygon([ dorCoordinates.value ]);
-//             map.getSource('dorParcel').setData(newParcel);
-//           } else {
-//             newParcel = multiPolygon(dorCoordinates.value);
-//             map.getSource('dorParcel').setData(newParcel);
-//           }
-//         }
-//         if (import.meta.env.VITE_DEBUG == 'true') console.log('2 map.layers:', map.getStyle().layers, map.getStyle().sources);
-//       }
-//       if (newTopic === 'li') {
-//         if (selectedLiBuildingNumber.value) {
-//           map.setPaintProperty(
-//             'liBuildingFootprints',
-//             'fill-color',
-//             ['match',
-//             ['get', 'id'],
-//             selectedLiBuildingNumber.value,
-//             '#FFFA80',
-//             /* other */ '#C2B7FF'
-//             ],
-//           )
-//         }
-//       }
-//       MapStore.selectedRegmap = null;
-//     } else {
-//       if (!MapStore.imageryOn) {
-//         map.setStyle($config.pwdDrawnMapStyle);
-//       }
-//       const addressMarker = map.getSource('addressMarker');
-//       const dorParcel = map.getSource('dorParcel');
-//       if (addressMarker) {
-//         // if (import.meta.env.VITE_DEBUG == 'true') console.log('1 map.layers:', map.getStyle().layers, map.getStyle().sources);
-//         if (pwdCoordinates.value.length) {
-//           addressMarker.setData(point(pwdCoordinates.value));
-//         }
-//         if (import.meta.env.VITE_DEBUG == 'true') console.log('dorCoordinates.value:', dorCoordinates.value);
-//       }
-//       if (dorParcel) {
-//         let newParcel;
-//         if ($config.parcelLayerForTopic[newTopic] == 'dor') {
-//           if (dorCoordinates.value.length > 3) {
-//             newParcel = polygon([ dorCoordinates.value ]);
-//             map.getSource('dorParcel').setData(newParcel);
-//           } else {
-//             newParcel = multiPolygon(dorCoordinates.value);
-//             map.getSource('dorParcel').setData(newParcel);
-//           }
-//         }
-//         if (import.meta.env.VITE_DEBUG == 'true') console.log('2 map.layers:', map.getStyle().layers, map.getStyle().sources);
-//       }
-//     }
-//     if (MapStore.cyclomediaOn) {
-//       updateCyclomediaCameraAngle();
-//     }
-//     if (MapStore.labelLayers.length && MapStore.labelLayers.length > 0) {
-//       setLabelLayers(MapStore.labelLayers);
-//     }
-//   }
-// )
 
 // allow the imagery to be toggled on and off, and set to different images
 const imagerySelected = computed(() => {

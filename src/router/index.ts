@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteComponent, type RouteLocation } from 'vue-router'
 import Home from '../views/Home.vue'
 
 import { useGeocodeStore } from '@/stores/GeocodeStore.ts'
@@ -21,11 +21,9 @@ const getGeocodeAndPutInStore = async(address: string) => {
   } else if (!GeocodeStore.aisData.features) {
     return;
   }
-  let currentAddress;
+  let currentAddress = null;
   if (GeocodeStore.aisData.features[0].properties.street_address) {
     currentAddress = GeocodeStore.aisData.features[0].properties.street_address;
-  } else if (GeocodeStore.aisData.features[0].street_address) {
-    currentAddress = GeocodeStore.aisData.features[0].street_address;
   }
   MainStore.setCurrentAddress(currentAddress);
   // MainStore.addressSearchRunning = false;
@@ -33,7 +31,7 @@ const getGeocodeAndPutInStore = async(address: string) => {
 
 // this is called on every route change, including address searches, initial app load, and back button clicks
 // when it is called, it may have some of the data it needs already in the store (after a geocode), or it may need to fetch everything (e.g. initial app load)
-const dataFetch = async(to, from) => {
+const dataFetch = async(to: RouteLocation, from: RouteLocation) => {
   if (import.meta.env.VITE_DEBUG == 'true') console.log('dataFetch is starting, to:', to, 'from:', from, 'to.params.address:', to.params.address, 'from.params.address:', from.params.address);
   const MainStore = useMainStore();
   MainStore.datafetchRunning = true;
@@ -46,7 +44,7 @@ const dataFetch = async(to, from) => {
   }
 
   let opaNum;
-  if (to.query.p != "") { opaNum = to.query.p }
+  if (to.query.p != "") opaNum = to.query.p;
 
   if (import.meta.env.VITE_DEBUG == 'true') console.log('to.params.address:', to.params.address, 'from.params.address:', from.params.address, 'GeocodeStore.aisData.normalized:', GeocodeStore.aisData.normalized);
   
@@ -66,7 +64,7 @@ const dataFetch = async(to, from) => {
   if (routeOpaChanged && to.query.p) {
     // if there is no geocode or the geocode does not match the address in the route, get the geocode
     if (import.meta.env.VITE_DEBUG) console.log('GeocodeStore.aisData.normalized:', GeocodeStore.aisData.normalized);
-    if (!GeocodeStore.aisData.normalized || GeocodeStore.aisData.normalized && GeocodeStore.aisData.normalized !== opaNum) {
+    if (opaNum && !GeocodeStore.aisData.normalized || GeocodeStore.aisData.normalized && GeocodeStore.aisData.normalized !== opaNum) {
       if (import.meta.env.VITE_DEBUG == 'true') console.log('in datafetch, routeOpaChanged:', routeOpaChanged, 'right before geocode, GeocodeStore.aisData:', GeocodeStore.aisData);
       // await clearStoreData();
       await getGeocodeAndPutInStore(opaNum);
@@ -174,14 +172,7 @@ router.afterEach(async (to, from) => {
   } else if (to.name !== 'not-found' && to.name !== 'search') {
     MainStore.addressSearchRunning = false;
     await dataFetch(to, from);
-    // let pageTitle = MainStore.appVersion + '.phila.gov';
-    let pageTitle = MainStore.appVersion.charAt(0).toUpperCase() + MainStore.appVersion.slice(1);
-    for (let param of Object.keys(to.params)) {
-      pageTitle += ' | ' + to.params[param];
-    }
-    MainStore.pageTitle = pageTitle;
   } else if (to.name == 'not-found') {
-    MainStore.currentTopic = "property"
     MainStore.currentAddress = null;
     MainStore.currentParcelGeocodeParameter = null;
     MainStore.currentParcelAddress = null;

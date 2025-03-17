@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 
 import { useMainStore } from '@/stores/MainStore.ts'
+import type { NavLinkProps } from '@phila/phila-ui-nav-link';
 const MainStore = useMainStore();
 
 if (!import.meta.env.VITE_PUBLICPATH) {
@@ -9,6 +10,17 @@ if (!import.meta.env.VITE_PUBLICPATH) {
 } else {
   MainStore.publicPath = import.meta.env.VITE_PUBLICPATH;
 }
+
+const links: NavLinkProps = [
+  {
+    type: 'native',
+    href: 'https://phila.formstack.com/forms/property_feedback_form' as RouteLocationRaw,
+    text: 'Feedback',
+    attrs: {
+      target: '_blank',
+    } as Record<PropertyKey, unknown>,
+  }
+];
 
 </script>
 
