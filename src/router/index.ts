@@ -29,6 +29,7 @@ const getGeocodeAndPutInStore = async(address: string) => {
   // MainStore.addressSearchRunning = false;
 };
 
+
 // this is called on every route change, including address searches, initial app load, and back button clicks
 // when it is called, it may have some of the data it needs already in the store (after a geocode), or it may need to fetch everything (e.g. initial app load)
 const dataFetch = async(to: RouteLocation, from: RouteLocation) => {
